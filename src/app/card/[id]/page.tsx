@@ -2,6 +2,39 @@ import { CARD_TEMPLATES, CHARITIES } from "@/lib/data";
 import { getCard } from "@/lib/cards";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const card = getCard(id);
+  if (!card || !card.paid) {
+    return { title: "Card Not Found — CooperCards" };
+  }
+  const template = CARD_TEMPLATES.find((t) => t.id === card.templateId) || CARD_TEMPLATES[4];
+  const charity = CHARITIES.find((c) => c.id === card.charityId);
+  const amount = (card.donationAmount / 100).toFixed(0);
+  const title = `${template.emoji} ${template.name} — a $${amount} donation to ${charity?.name || card.charityName}`;
+  const description = `${card.senderName} sent ${card.recipientName} a CooperCard with a $${amount} donation to ${charity?.name || card.charityName}. Send your own card that gives back!`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "CooperCards",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function CardViewPage({
   params,
