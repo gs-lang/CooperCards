@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CooperCards
 
-## Getting Started
+Charitable giving platform — send beautiful greeting cards that trigger real donations to charities.
 
-First, run the development server:
+**Stack:** Next.js 16, Stripe, Tailwind CSS, TypeScript
+
+---
+
+## Quick Deploy to Replit
+
+### Step 1 — Upload the code
+
+From this machine, zip the project (excluding `node_modules` and `.next`):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+zip -r cooper-cards.zip . -x "node_modules/*" -x ".next/*" -x "data/*"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Upload the zip to your Replit project at https://replit.com/@gregsilverman1/Cooper-Cards, or push via git:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+git remote add replit https://replit.com/@gregsilverman1/Cooper-Cards.git
+git push replit main
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Step 2 — Set Replit Secrets
 
-## Learn More
+In Replit → Secrets, add:
 
-To learn more about Next.js, take a look at the following resources:
+| Key | Value |
+|-----|-------|
+| `STRIPE_SECRET_KEY` | `sk_test_...` (from Stripe Dashboard) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` (from Stripe Webhooks) |
+| `NEXT_PUBLIC_BASE_URL` | `https://your-replit-url.replit.app` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Step 3 — Install and run
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+In the Replit Shell:
 
-## Deploy on Vercel
+```bash
+npm install
+npm run build
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Step 4 — Configure Stripe Webhook
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+In Stripe Dashboard → Webhooks → Add endpoint:
+- URL: `https://your-replit-url.replit.app/api/webhook`
+- Events: `checkout.session.completed`
+
+Copy the webhook signing secret and add it as `STRIPE_WEBHOOK_SECRET` in Replit Secrets.
+
+### Step 5 — Switch to live Stripe keys
+
+Replace `sk_test_...` and `pk_test_...` with live keys from the Stripe Dashboard.
+
+---
+
+## Demo Mode (no Stripe needed)
+
+Without `STRIPE_SECRET_KEY` set, the app runs in demo mode — checkout skips Stripe and cards are marked paid instantly. Useful for testing the full flow.
+
+---
+
+## App Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing page |
+| `/cards` | Card template gallery |
+| `/send?card={id}` | Charity selection + checkout |
+| `/success?cardId={id}` | Confirmation + share link |
+| `/card/{id}` | Recipient card view |
+| `/api/create-checkout` | POST — creates Stripe checkout session |
+| `/api/payment-success` | GET — handles Stripe redirect, marks card paid |
+| `/api/webhook` | POST — Stripe webhook for reliable payment confirmation |
+| `/api/card/[id]` | GET — fetches card data |
+
+---
+
+## Environment Variables
+
+See `.env.example` for all variables. Copy to `.env.local` for local dev:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your keys
+```
+
+---
+
+## Local Development
+
+```bash
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build
+npm start       # serve production build
+```
+
+Cards are stored in `data/cards.json` (created automatically). Reset by deleting the file.
